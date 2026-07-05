@@ -6,15 +6,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Create a non-root user to run the app
-RUN addgroup --system app && adduser --system --group app
+# Create a non-root user with an explicit numeric UID/GID. Kubernetes'
+# runAsNonRoot check requires a numeric UID to verify non-root - a named
+# user alone isn't enough (kubelet can't resolve /etc/passwd at that point).
+RUN addgroup --system --gid 1001 app && adduser --system --uid 1001 --gid 1001 app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 
-USER app
+USER 1001:1001
 
 EXPOSE 8080
 
